@@ -13,7 +13,7 @@ def position_node():
     # Declare the node, and register it with a unique name
     rospy.init_node('model_service_node', anonymous=True)
     # Define the execution rate object (10Hz)
-    rate = rospy.Rate(1)
+    rate = rospy.Rate(10)
     k = 0
     mvv = 1
 

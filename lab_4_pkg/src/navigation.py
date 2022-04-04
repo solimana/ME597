@@ -9,6 +9,9 @@ import tf
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
 from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Pose, Twist
+from astar_map import MapProcessor
+from astar_map import AStar
+
 
 class Navigation:
     """! Navigation node class.
@@ -62,7 +65,7 @@ class Navigation:
         """
         # TODO: MAKE SURE YOUR POSITION ESTIMATE IS GOOD ENOUGH.
         self.ttbot_pose = data.pose
-        cov = data.pose.covariance
+        # cov = data.pose.covariance
         rospy.loginfo('ttbot_pose:{:.4f},{:.4f}'.format(self.ttbot_pose.pose.position.x,self.ttbot_pose.pose.position.y))
         rospy.loginfo('ttbot_pose:{}'.format(cov))
         self.covt = data.pose.covariance[0] + data.pose.covariance[7] #x+y what else do we add ? 
@@ -133,11 +136,12 @@ class Navigation:
         timeout = False
         idx = 0
         while not rospy.is_shutdown():
-            if self.covt  <0.5: # set to some reasonable value
+            # if self.covt  <0.5: # set to some reasonable value
 		     
                 # 1. Create the path to follow
-                path = self.a_star_path_planner(self.ttbot_pose,self.goal_pose)
+                # path = self.a_star_path_planner(self.ttbot_pose,self.goal_pose)
                 # rospy.loginfo('ttbot_pose:{}'.format(cov))
+                
 
                 # 2. Loop through the path and move the robot
                 idx = self.get_path_idx(path,self.ttbot_pose)
@@ -148,8 +152,8 @@ class Navigation:
                 # ----------------------------------------
                 # TODO: YOU NEED TO ADD YOUR SOLUTION HERE
                 # ----------------------------------------
-            else : 
-                print('covariance way too High '+ str(self.covt))
+            # else : 
+            #     print('covariance way too High '+ str(self.covt))
 
                 
 

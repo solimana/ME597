@@ -155,26 +155,29 @@ class Navigation:
             return 0
 
     def move(self, target_y=0, target_x=0,heading=0):
+        
         cmd_vel = Twist()
         dt = 1/100
         # d = ( (target_y-self.ttbot_pose.pose.position.y)**2 + (target_x-self.ttbot_pose.pose.position.x)**2)**(0.5)
         # error = abs(d)
         d = sqrt(pow((target_y - self.ttbot_pose.pose.position.y), 2) + pow((target_x - self.ttbot_pose.pose.position.x), 2))
         error =d
-        print(error)
+        # print(error)
         
-        steering_angle = -90 + math.degrees(atan2(self.ttbot_pose.pose.position.y-target_y,  self.ttbot_pose.pose.position.x-target_x))
-        error_s = heading-self.current_heading
-
+        # steering_angle = -90 + math.degrees(atan2(self.ttbot_pose.pose.position.y-target_y,  self.ttbot_pose.pose.position.x-target_x))
+        error_s = abs(heading-self.current_heading)
+        error_s2 = (heading-self.current_heading)
+        print("error_s : ",error_s)
         if (error>0.1):
-            PID_obj_2 = PidController(0.1, 0.0, 0.000, dt, 0.0, 0.2)
+            PID_obj_2 = PidController(0.0001, 0.000001, 0.0001, dt, 0.0, 0.2)
             cmd_vel.linear.x = PID_obj_2.step(error)
             # print("xvel",cmd_vel.linear.x)
             # cmd_vel.linear.z   =  1.5 * (steering_angle - (self.current_heading))
             # cmd_vel.linear.z = np.clip(cmd_vel.linear.z, 0.0, 0.4) # clip function to not exceed min/max soft bounds
 
-            print("Moving, please wait")
-            cmd_vel.linear.x = 0
+            # print("Moving, please wait")
+            # print("y desired : " ,target_y)
+            # cmd_vel.linear.x = 0
             # self.cmd_vel_pub.publish(cmd_vel)
             # return 1
         else:
@@ -185,12 +188,12 @@ class Navigation:
             # return 0
 
         if (error_s>0.1):
-            PID_obj_3 = PidController(0.1, 0.0, 0.000, dt, 0.0, 0.2)
-            cmd_vel.linear.z = PID_obj_3.step(error_s)
-            print("xvel",cmd_vel.linear.x)
-            cmd_vel.linear.z  = 0
+            PID_obj_3 = PidController(0.001, 0.00000000001, 0.0000000001, dt, 0.0, 0.2)
+            cmd_vel.angular.z = PID_obj_3.step(error_s)
+            print("zvel = ",cmd_vel.linear.z)
+            # cmd_vel.linear.z  = 0
         else : 
-            cmd_vel.linear.z  = 0
+            cmd_vel.angular.z  = 0
             # return
 
 
@@ -242,6 +245,7 @@ class Navigation:
         # index_x_c = int(floor(index_x_c * 200/400))
 
         
+
         origin=(100,100)
         
         new_points_g = self.rotate([(0,index_y_g)], origin=origin, degrees=180)
@@ -261,8 +265,9 @@ class Navigation:
         print("index_y_G :  ,index_X_g: ",index_y_g,index_X_g)
         print("index_y_c :  ,index_X_c: ",index_y_c,index_X_c)
 
-        # st_pt = "200,50"
-        # end_pt = "150,125"
+
+        # st_pt = "143,54"
+        # end_pt = "92,107"               
 
         path = trigger(st_pt,end_pt) 
 
@@ -312,28 +317,34 @@ class Navigation:
         transformed_path = []
 
         for X in path:
-            y1 = X[1]
-            x1 = X[0]
-            # , x1 = path[index]
-            # y2, x2 = path[index+1]
+            y1 = X[0]
+            x1 = X[1]
+
+            # print("y : " , y1)
+
             origin=(100,100)
 
             # rotation to correct incorrect y-axis
             new_points_g = self.rotate([(0,y1)], origin=origin, degrees=180)
             y1 = int(new_points_g[1])
- 
+            # x2 = x1
+            # x1 = y1
+            # y1 =x2
 
-            print(resolution)
+            # print(resolution)
             y_rviz = (y1*480/200)*resolution+Xstarty
             x_rviz = (x1*480/200)*resolution+Xstartx
             heading = self.goal_heading
         
             transformed_path.append((y_rviz, x_rviz, heading))
 
-        # y_rviz = self.goal_pose.pose.position.y
-        # x_rviz = self.goal_pose.pose.position.x
-        # heading = self.goal_heading
-        # transformed_path.append((y_rviz, x_rviz, heading))
+
+
+
+        y_rviz = self.goal_pose.pose.position.y
+        x_rviz = self.goal_pose.pose.position.x
+        heading = self.goal_heading
+        transformed_path.append((y_rviz, x_rviz, heading))
 
 
         # for index in range(len(path)-1):
@@ -395,8 +406,8 @@ class Navigation:
             #     pass
             try:
                 
-                # self.move(y, x,heading)
-                print("here")
+                self.move(y, x,heading)
+                # print("here")
             except rospy.ROSInterruptException:
                 print("program interrupted before completion", file=sys.stderr)
         

@@ -363,6 +363,7 @@ def trigger(start_pt,goal_pt):
     mp.map_graph.root = start_pt
     mp.map_graph.end = end_pt
     print("startpt , ",start_pt)
+    print("end_pt , ",end_pt)
 
     as_maze = AStar(mp.map_graph) # creates object
 
@@ -370,14 +371,14 @@ def trigger(start_pt,goal_pt):
 
 
     path_as,dist_as = as_maze.reconstruct_path(mp.map_graph.g[mp.map_graph.root],mp.map_graph.g[mp.map_graph.end]) # finds path to goal 
-    fig, ax = plt.subplots(nrows = 1, ncols = 3, dpi=300, sharex=True, sharey=True)
-    path_arr_as = mp.draw_path(path_as)
-    ax[2].imshow(path_arr_as)
-    ax[2].set_title('Path A*')
+    # fig, ax = plt.subplots(nrows = 1, ncols = 3, dpi=300, sharex=True, sharey=True)
+    # path_arr_as = mp.draw_path(path_as)
+    # ax[2].imshow(path_arr_as)
+    # ax[2].set_title('Path A*')
     # path_as2  = path_as
     path_as = [tuple(map(int, x.split(','))) for x in path_as]
-    #print(path_as)
-    #print(dist_as)
+    print(path_as)
+    print(dist_as)
 
 
     return path_as

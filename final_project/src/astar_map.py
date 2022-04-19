@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from tracemalloc import start
 import rospy
 
 from PIL import Image, ImageOps 
@@ -42,7 +43,7 @@ class Map():
         # Open the map image
         map_name = map_df.image[0]
         im = Image.open(map_name)
-        size = 250, 250
+        size = 200, 200
         im.thumbnail(size)
         im = ImageOps.grayscale(im)
         # Get the limits of the map. This will help to display the map
@@ -345,7 +346,7 @@ class AStar():
         return path,dist
 
 #'''
-def trigger(goal_pt):
+def trigger(start_pt,goal_pt):
     Map('my_map')
     mp = MapProcessor('my_map')
 
@@ -356,11 +357,12 @@ def trigger(goal_pt):
     mp.get_graph_from_map()
 
 
-    start_pt = "200,50"
+    start_pt = start_pt
     end_pt = goal_pt # goal 
 
     mp.map_graph.root = start_pt
     mp.map_graph.end = end_pt
+    print("startpt , ",start_pt)
 
     as_maze = AStar(mp.map_graph) # creates object
 
@@ -368,10 +370,15 @@ def trigger(goal_pt):
 
 
     path_as,dist_as = as_maze.reconstruct_path(mp.map_graph.g[mp.map_graph.root],mp.map_graph.g[mp.map_graph.end]) # finds path to goal 
-
+    fig, ax = plt.subplots(nrows = 1, ncols = 3, dpi=300, sharex=True, sharey=True)
+    path_arr_as = mp.draw_path(path_as)
+    ax[2].imshow(path_arr_as)
+    ax[2].set_title('Path A*')
+    # path_as2  = path_as
     path_as = [tuple(map(int, x.split(','))) for x in path_as]
     #print(path_as)
     #print(dist_as)
+
 
     return path_as
 

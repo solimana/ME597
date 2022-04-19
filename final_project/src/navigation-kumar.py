@@ -138,14 +138,17 @@ class Navigation:
             print("Callibration done")
             return 0 #we are done callibrating, exit while loop after setting yaw to 0
 
-    def align(self, target=0):
+
+    def calib_align(self, target=0):
         cmd_vel = Twist()
         dt = 1/100
         error = abs(target-self.current_heading)
+
         if (error>1.5):
             PID_obj_1 = PidController(0.01, 0.0000, 0.0001, dt, 0.0, 1.5)
             cmd_vel.angular.z = PID_obj_1.step(error)
-            print("Aligning, please wait")
+            print("calib Aligning, please wait")
+            cmd_vel.linear.x = 0
             self.cmd_vel_pub.publish(cmd_vel)
             return 1
         else:
@@ -154,7 +157,28 @@ class Navigation:
             print("Done aligning")
             return 0
 
-    def move(self, target_y=0, target_x=0,heading=0):
+
+    def align(self, target=0):
+        cmd_vel = Twist()
+        dt = 1/100
+        error = abs(target-self.current_heading)
+        print("heading err   : " , error)
+        print("desired heading   : " , target)
+        print("current heading   : " , self.current_heading)
+        if (error>1.5):
+            PID_obj_1 = PidController(0.01, 0.0000, 0.0001, dt, 0.0, 0.5)
+            cmd_vel.angular.z = PID_obj_1.step(error)
+            print("Aligning, please wait")
+            cmd_vel.linear.x = 0
+            self.cmd_vel_pub.publish(cmd_vel)
+            return 1
+        else:
+            cmd_vel.angular.z = 0
+            self.cmd_vel_pub.publish(cmd_vel)
+            print("Done aligning")
+            return 0
+
+    def move(self, target_y=0, target_x=0):
         
         cmd_vel = Twist()
         dt = 1/100
@@ -162,42 +186,44 @@ class Navigation:
         # error = abs(d)
         d = sqrt(pow((target_y - self.ttbot_pose.pose.position.y), 2) + pow((target_x - self.ttbot_pose.pose.position.x), 2))
         error =d
-        # print(error)
+        print("errrrr : ",error)
         
         # steering_angle = -90 + math.degrees(atan2(self.ttbot_pose.pose.position.y-target_y,  self.ttbot_pose.pose.position.x-target_x))
-        error_s = abs(heading-self.current_heading)
-        error_s2 = (heading-self.current_heading)
-        print("error_s : ",error_s)
+        # error_s = abs(heading-self.current_heading)
+        # error_s2 = (heading-self.current_heading)
+        # print("error_s : ",error_s)
         if (error>0.1):
-            PID_obj_2 = PidController(0.0001, 0.000001, 0.0001, dt, 0.0, 0.2)
+            PID_obj_2 = PidController(0.1, 0.000001, 0.0001, dt, 0.0, 0.2)
             cmd_vel.linear.x = PID_obj_2.step(error)
+            self.cmd_vel_pub.publish(cmd_vel) 
             # print("xvel",cmd_vel.linear.x)
             # cmd_vel.linear.z   =  1.5 * (steering_angle - (self.current_heading))
             # cmd_vel.linear.z = np.clip(cmd_vel.linear.z, 0.0, 0.4) # clip function to not exceed min/max soft bounds
 
-            # print("Moving, please wait")
+            print("Moving, please wait")
             # print("y desired : " ,target_y)
             # cmd_vel.linear.x = 0
             # self.cmd_vel_pub.publish(cmd_vel)
-            # return 1
+            return 1
         else:
             cmd_vel.linear.x = 0
             # cmd_vel.linear.z   = 0
             # self.cmd_vel_pub.publish(cmd_vel)
             print("Done moving to position")
-            # return 0
+            self.cmd_vel_pub.publish(cmd_vel) 
+            return 0
 
-        if (error_s>0.1):
-            PID_obj_3 = PidController(0.001, 0.00000000001, 0.0000000001, dt, 0.0, 0.2)
-            cmd_vel.angular.z = PID_obj_3.step(error_s)
-            print("zvel = ",cmd_vel.linear.z)
-            # cmd_vel.linear.z  = 0
-        else : 
-            cmd_vel.angular.z  = 0
-            # return
+        # if (error_s>0.1):
+        #     PID_obj_3 = PidController(0.1, 0.00000000001, 0.0000000001, dt, 0.0, 0.2)
+        #     cmd_vel.angular.z = PID_obj_3.step(error_s)
+        #     print("zvel = ",cmd_vel.linear.z)
+        #     # cmd_vel.linear.z  = 0
+        # else : 
+        #     cmd_vel.angular.z  = 0
+        #     # return
 
 
-        self.cmd_vel_pub.publish(cmd_vel)        
+        # self.cmd_vel_pub.publish(cmd_vel)        
 
 
 
@@ -316,35 +342,37 @@ class Navigation:
         
         transformed_path = []
 
-        for X in path:
-            y1 = X[0]
-            x1 = X[1]
+        # for X in path:
+        #     y1 = X[0]
+        #     x1 = X[1]
+        #     y2 = path[X+1]
 
-            # print("y : " , y1)
+        #     # print("y : " , y1)
 
-            origin=(100,100)
+        #     origin=(100,100)
 
-            # rotation to correct incorrect y-axis
-            new_points_g = self.rotate([(0,y1)], origin=origin, degrees=180)
-            y1 = int(new_points_g[1])
-            # x2 = x1
-            # x1 = y1
-            # y1 =x2
+        #     # rotation to correct incorrect y-axis
+        #     new_points_g = self.rotate([(0,y1)], origin=origin, degrees=180)
+        #     y1 = int(new_points_g[1])
+        #     # x2 = x1
+        #     # x1 = y1
+        #     # y1 =x2
 
-            # print(resolution)
-            y_rviz = (y1*480/200)*resolution+Xstarty
-            x_rviz = (x1*480/200)*resolution+Xstartx
-            heading = self.goal_heading
+        #     # print(resolution)
+            
+        #     y_rviz = (y1*480/200)*resolution+Xstarty
+        #     x_rviz = (x1*480/200)*resolution+Xstartx
+        #     heading = self.goal_heading
         
-            transformed_path.append((y_rviz, x_rviz, heading))
+        #     transformed_path.append((y_rviz, x_rviz, heading))
 
 
 
 
-        y_rviz = self.goal_pose.pose.position.y
-        x_rviz = self.goal_pose.pose.position.x
-        heading = self.goal_heading
-        transformed_path.append((y_rviz, x_rviz, heading))
+        # y_rviz = self.goal_pose.pose.position.y
+        # x_rviz = self.goal_pose.pose.position.x
+        # heading = self.goal_heading
+        # transformed_path.append((y_rviz, x_rviz, heading))
 
 
         # for index in range(len(path)-1):
@@ -391,6 +419,35 @@ class Navigation:
 
         # print(transformed_path)
 
+
+        for index in range(len(path)-1):
+            y1, x1 = path[index]
+            y2, x2 = path[index+1]
+            origin=(100,100)
+
+            # rotation to correct incorrect y-axis
+            new_points_g = self.rotate([(0,y1)], origin=origin, degrees=180)
+            y1 = int(new_points_g[1])
+            new_points_g = self.rotate([(0,y2)], origin=origin, degrees=180)
+            y2 = int(new_points_g[1])
+
+
+            # print(resolution)
+            y_rviz = (y1*480/200)*resolution+Xstarty
+            x_rviz = (x1*480/200)*resolution+Xstartx
+
+            heading =  math.degrees(math.atan2( (y2-y1),(x2-x1) ))
+            transformed_path.append((y_rviz, x_rviz, heading))
+            
+
+        y_rviz = self.goal_pose.pose.position.y
+        x_rviz = self.goal_pose.pose.position.x
+        heading = self.goal_heading
+        transformed_path.append((y_rviz, x_rviz, heading))
+
+
+        
+
         return transformed_path
         
 
@@ -401,15 +458,18 @@ class Navigation:
         @return path                   Path object containing the sequence of waypoints of the created path.
         """
         for y,x,heading in transformed_path:
-            # self.align(heading)
-            # while self.move(y, x):
-            #     pass
-            try:
+            while self.align(heading):
+                 pass
+            print("done align")
+            # self.move(y, x)
+            while self.move(y, x):
+                pass
+            # # try:
                 
-                self.move(y, x,heading)
-                # print("here")
-            except rospy.ROSInterruptException:
-                print("program interrupted before completion", file=sys.stderr)
+            #     self.move(y, x,heading)
+            #     # print("here")
+            # except rospy.ROSInterruptException:
+            #     print("program interrupted before completion", file=sys.stderr)
         
 
 
@@ -452,7 +512,7 @@ if __name__ == "__main__":
 
     while (nav.callibrate()):
         pass
-    while(nav.align(0)):
+    while(nav.calib_align(0)):
         pass
 
     try:

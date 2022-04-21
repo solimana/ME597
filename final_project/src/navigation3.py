@@ -20,7 +20,13 @@ from nav_msgs.msg import OccupancyGrid
 from numpy import floor
 from math import pow, atan2, radians, sqrt
 from tf.transformations import euler_from_quaternion, quaternion_from_euler
-
+from sensor_msgs.msg import LaserScan
+from gazebo_msgs.srv import SpawnModel, DeleteModel, SetModelState
+from gazebo_msgs.msg import ModelState
+import cv2
+from cv_bridge import CvBridge, CvBridgeError
+from sensor_msgs.msg import Image, CompressedImage
+import matplotlib.pyplot as plt
 
 
 mapData=OccupancyGrid()
@@ -50,6 +56,8 @@ class Navigation:
         self.velocity_publisher = rospy.Publisher('/cmd_vel',Twist, queue_size=10)
         self.distance_tolerance = 0.1
         self.done = 0
+        self.cx = 0
+        self.cy = 1000
 
 
     def init_app(self):
@@ -65,10 +73,46 @@ class Navigation:
         rospy.Subscriber('/move_base_simple/goal', PoseStamped, self.__goal_pose_cbk, queue_size=50)
         rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, self.__ttbot_pose_cbk, queue_size=50)
         rospy.Subscriber('/map', OccupancyGrid, self.mapCallBack)
+        rospy.Subscriber("/camera/rgb/image_raw", Image, self.image_callback)
+
 
         # Publishers
         self.path_pub = rospy.Publisher('global_plan', Path, queue_size=50)
         # self.cmd_vel_pub = rospy.Publisher('cmd_vel', Twist, queue_size=50)
+
+
+    def image_callback(self,data):
+
+        # process image & convert to ROS
+        bridge = CvBridge()
+        cv2img = bridge.imgmsg_to_cv2(data, desired_encoding="bgr8")
+        lower_white = np.array([0,0,240])    # mb_marker_buoy_red
+        upper_white = np.array([255,15,255]) # world0 = sunny
+        hsv_img = cv2.cvtColor(cv2img, cv2.COLOR_BGR2HSV)
+        mask_white = cv2.inRange(hsv_img, lower_white, upper_white)
+        res_red = cv2.bitwise_and(cv2img, cv2img, mask= mask_white)           # to find the red blob
+        
+        # Calculate centroid of the blob of binary image using ImageMoments
+
+        m_red = cv2.moments(mask_white, False)
+        try:
+            blob_area_red = m_red['m00']
+        except ZeroDivisionError:
+            blob_area_red = 0
+        if m_red["m00"] != 0:
+            self.cX = int(m_red["m10"] / m_red["m00"])
+            self.cY = int(m_red["m01"] / m_red["m00"])
+        else :  
+            self.cX = 1000
+            self.cY = 1000
+        # print(cX)
+        # print(self.cY)
+        
+        
+        # cv2.imshow("RED", mask_red)  
+        # cv2.imshow("Original", cv2img)
+        cv2.waitKey(1)
+
 
 
     def __goal_pose_cbk(self, data):
@@ -174,7 +218,7 @@ class Navigation:
            return sqrt(pow((goal_pose.position.x - self.ttbot_pose.pose.position.x), 2) +
                        pow((goal_pose.position.y - self.ttbot_pose.pose.position.y), 2))
 
-    def linear_vel(self, goal_pose, constant=.25):
+    def linear_vel(self, goal_pose, constant=.3):
             return constant * self.euclidean_distance(self.local_goal_pose)
 
 
@@ -186,31 +230,42 @@ class Navigation:
 
     def move2goal(self):
     
-           vel_msg = Twist()
-   
-           while self.euclidean_distance(self.local_goal_pose) >= self.distance_tolerance:
-
-   
+        vel_msg = Twist()
+        
+        while self.euclidean_distance(self.local_goal_pose) >= self.distance_tolerance:
+                # print("self.cX ",self.cX )
+                print("self.cy ",self.cY )
+                if(self.cY >  460):
                # Linear velocity in the x-axis.
-               vel_msg.linear.x = self.linear_vel(self.local_goal_pose)
-               vel_msg.linear.y = 0
-               vel_msg.linear.z = 0
-   
-               # Angular velocity in the z-axis.
-               vel_msg.angular.x = 0
-               vel_msg.angular.y = 0
-               vel_msg.angular.z = self.angular_vel(self.local_goal_pose)
-   
-               # Publishing our vel_msg
-               self.velocity_publisher.publish(vel_msg)
-   
+                    vel_msg.linear.x = self.linear_vel(self.local_goal_pose)
+                    vel_msg.linear.y = 0
+                    vel_msg.linear.z = 0
+        
+                    # Angular velocity in the z-axis.
+                    vel_msg.angular.x = 0
+                    vel_msg.angular.y = 0
+                    vel_msg.angular.z = self.angular_vel(self.local_goal_pose)
+        
+                    # Publishing our vel_msg
+                    # self.velocity_publisher.publish(vel_msg)
+                else : 
+                    vel_msg.linear.x = 0.0
+                    vel_msg.linear.y = 0
+                    vel_msg.linear.z = 0
+        
+                    # Angular velocity in the z-axis.
+                    vel_msg.angular.x = 0
+                    vel_msg.angular.y = 0
+                    vel_msg.angular.z = 0.0
+
+                self.velocity_publisher.publish(vel_msg)
                # Publish at the desired rate.
-               self.rate.sleep()
+                self.rate.sleep()
    
            # Stopping our robot after the movement is over.
-           vel_msg.linear.x = 0
-           vel_msg.angular.z = 0
-           self.velocity_publisher.publish(vel_msg)
+        vel_msg.linear.x = 0
+        vel_msg.angular.z = 0
+        self.velocity_publisher.publish(vel_msg)
 
    
     def a_star_path_planner(self):

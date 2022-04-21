@@ -1,0 +1,4 @@
+<launch>
+
+  <include file="$(find ros_autonomous_slam)/launch/task1.launch"/>
+</launch>

@@ -5,7 +5,7 @@ To spawn the dynamic obstacles:
 `rosrun final_project dynamic_obstacles.py`
 
 To watch videos of the tasks:
-'https://purdue0-my.sharepoint.com/:f:/g/personal/solimana_purdue_edu/ErUW64bX51VOv2TGLcsSDB8BFTtCcpPCPXbHNXF9EJn2GA?e=cHKNJH'
+`https://purdue0-my.sharepoint.com/:f:/g/personal/solimana_purdue_edu/ErUW64bX51VOv2TGLcsSDB8BFTtCcpPCPXbHNXF9EJn2GA?e=cHKNJH`
 
 
 

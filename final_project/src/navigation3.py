@@ -196,10 +196,12 @@ class Navigation:
     def calib_align(self, target=0):
         cmd_vel = Twist()
         dt = 1/100
-        error = abs(target-self.current_heading)
+        error = (target-self.current_heading)
 
-        if (error>1.5):
-            PID_obj_1 = PidController(0.01, 0.0000, 0.0001, dt, 0.0, 1.5)
+        if (abs(error)>5.5):
+            # print(error)
+            PID_obj_1 = PidController(0.01, 0.000, 0.0000, dt, -0.2, 0.2)
+
             cmd_vel.angular.z = PID_obj_1.step(error)
             print("calib Aligning, please wait")
             cmd_vel.linear.x = 0
@@ -218,24 +220,28 @@ class Navigation:
            return sqrt(pow((goal_pose.position.x - self.ttbot_pose.pose.position.x), 2) +
                        pow((goal_pose.position.y - self.ttbot_pose.pose.position.y), 2))
 
-    def linear_vel(self, goal_pose, constant=.25):
-            return constant * self.euclidean_distance(self.local_goal_pose)
+    def linear_vel(self, goal_pose, constant=0.4):
+            # linvel = PidController(0.3, 0.0000, 0.00, 0.1, -.7, 0.7)
+            # return linvel.step(self.euclidean_distance(self.local_goal_pose))
+            return (constant * self.euclidean_distance(self.local_goal_pose))
 
 
     def steering_angle(self, goal_pose):
         return math.degrees(atan2(goal_pose.position.y - self.ttbot_pose.pose.position.y, goal_pose.position.x - self.ttbot_pose.pose.position.x))
   
-    def angular_vel(self, goal_pose, constant=0.01):
-         return constant * (self.steering_angle(self.local_goal_pose) - self.current_heading)
+    def angular_vel(self, goal_pose, constant=0.025):
+            # angvel = PidController(0.01, 0.0000, 0.00, 0.1, -0.25, 0.25)
+            # return angvel.step((self.steering_angle(self.local_goal_pose) - self.current_heading))
+         return (constant * (self.steering_angle(self.local_goal_pose) - self.current_heading))
 
     def move2goal(self):
     
         vel_msg = Twist()
         
         while self.euclidean_distance(self.local_goal_pose) >= self.distance_tolerance:
-                # print("self.cX ",self.cX )
+                print("self.cX ",self.cX )
                 print("self.cy ",self.cY )
-                if(self.cY >  460):
+                if(self.cY >  430):
                # Linear velocity in the x-axis.
                     vel_msg.linear.x = self.linear_vel(self.local_goal_pose)
                     vel_msg.linear.y = 0
@@ -433,11 +439,25 @@ class Navigation:
 if __name__ == "__main__":
     nav = Navigation(node_name='Navigation')
     nav.init_app()
+    try:
+        while (nav.callibrate()):
+            pass
+        while(nav.calib_align(0)):
+            pass
+    except rospy.ROSInterruptException:
+        velocity_publisher = rospy.Publisher('/cmd_vel',Twist, queue_size=10)
+        vel_msg = Twist()
+        vel_msg.linear.x = 0
+        vel_msg.angular.z = 0
+        velocity_publisher.publish(vel_msg)
+        print("program interrupted before completion", file=sys.stderr)
 
-    while (nav.callibrate()):
-        pass
-    while(nav.calib_align(0)):
-        pass
+
+
+    # while (nav.callibrate()):
+    #     pass
+    # while(nav.calib_align(0)):
+    #     pass
 
     try:
         nav.run()

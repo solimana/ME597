@@ -347,8 +347,8 @@ class AStar():
 
 #'''
 def trigger(start_pt,goal_pt):
-    Map('my_map')
-    mp = MapProcessor('my_map')
+    Map('src/ME597/final_project/src/my_map')
+    mp = MapProcessor('src/ME597/final_project/src/my_map')
 
 
     kr = mp.rect_kernel(5,1)

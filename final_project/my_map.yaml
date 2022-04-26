@@ -1,4 +1,4 @@
-image: final_project/my_map.pgm
+image: ME597/final_project/my_map.pgm
 resolution: 0.100000
 origin: [-26.000000, -26.000000, 0.000000]
 negate: 0

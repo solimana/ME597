@@ -103,8 +103,8 @@ class Navigation:
             self.cX = int(m_red["m10"] / m_red["m00"])
             self.cY = int(m_red["m01"] / m_red["m00"])
         else :  
-            self.cX = 1000
-            self.cY = 1000
+            self.cX = 100000
+            self.cY = 100000
         # print(cX)
         # print(self.cY)
         
@@ -220,7 +220,7 @@ class Navigation:
            return sqrt(pow((goal_pose.position.x - self.ttbot_pose.pose.position.x), 2) +
                        pow((goal_pose.position.y - self.ttbot_pose.pose.position.y), 2))
 
-    def linear_vel(self, goal_pose, constant=0.4):
+    def linear_vel(self, goal_pose, constant=0.6):
             # linvel = PidController(0.3, 0.0000, 0.00, 0.1, -.7, 0.7)
             # return linvel.step(self.euclidean_distance(self.local_goal_pose))
             return (constant * self.euclidean_distance(self.local_goal_pose))
@@ -241,8 +241,25 @@ class Navigation:
         while self.euclidean_distance(self.local_goal_pose) >= self.distance_tolerance:
                 print("self.cX ",self.cX )
                 print("self.cy ",self.cY )
-                if(self.cY >  430):
-               # Linear velocity in the x-axis.
+
+                zero_cx = 950
+                # cx = abs(self.cX-zero_cx)
+    
+                cx = sqrt(pow((self.cX), 2) +pow((self.cY), 2))
+                print("cx ",cx )
+                stopx = 0
+                if (self.cX<950 and self.cX >200 and self.cY<440 ):
+                    stopx = 1
+                if (self .cX > 950 and self.cX <2000 and self.cY<440):
+                    stopx = 1
+
+
+
+                if (self.cY >  430 and stopx == 0):
+                    print("movinggggggggggggggggggggggggggggggggggggggggggg")
+
+                # if (cx <  1900):
+            #    Linear velocity in the x-axis.
                     vel_msg.linear.x = self.linear_vel(self.local_goal_pose)
                     vel_msg.linear.y = 0
                     vel_msg.linear.z = 0
@@ -252,8 +269,8 @@ class Navigation:
                     vel_msg.angular.y = 0
                     vel_msg.angular.z = self.angular_vel(self.local_goal_pose)
         
-                    # Publishing our vel_msg
-                    # self.velocity_publisher.publish(vel_msg)
+                    # Publishing ?our vel_msg
+                    self.velocity_publisher.publish(vel_msg)
                 else : 
                     vel_msg.linear.x = 0.0
                     vel_msg.linear.y = 0
@@ -265,7 +282,7 @@ class Navigation:
                     vel_msg.angular.z = 0.0
 
                 self.velocity_publisher.publish(vel_msg)
-               # Publish at the desired rate.
+            #    Publish at the desired rate.
                 self.rate.sleep()
    
            # Stopping our robot after the movement is over.

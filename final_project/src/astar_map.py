@@ -310,8 +310,8 @@ class AStar():
             end = tuple(map(int, self.in_tree.end.split(',')))
             self.h[name] = np.sqrt((end[0]-start[0])**2 + (end[1]-start[1])**2)
         
-        for __,node in in_tree.g.items():
-            self.q.push(node)
+        # for __,node in in_tree.g.items():
+        #     self.q.push(node)
      
     def __get_f_score(self,node):
         self.f[node.name] = self.dist[node.name] + self.h[node.name]
@@ -319,6 +319,8 @@ class AStar():
     
     def solve(self, sn, en):
         self.dist[sn.name] = 0
+        self.q.push(sn)  # push the start node
+
         while len(self.q) > 0:
             self.q.sort(key=self.__get_f_score)
             u = self.q.pop()
@@ -332,6 +334,7 @@ class AStar():
                 if new_dist < self.dist[c.name]:
                     self.dist[c.name] = new_dist
                     self.via[c.name] = u.name
+                    self.q.push(c)  # push the found node
     
     def reconstruct_path(self,sn,en):
         start_key = sn.name

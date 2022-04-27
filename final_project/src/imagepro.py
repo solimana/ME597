@@ -54,8 +54,12 @@ def image_callback(data):
         print("red:", blob_area_red)  # min: 11730    can see : 448035
         cX = int(m_red["m10"] / m_red["m00"])
         cY = int(m_red["m01"] / m_red["m00"])
+        print('blob_area_red ',blob_area_red)
         print(cX)
         print(cY)
+        zero_cx = 950
+        cx = abs(cX-zero_cx)
+        print("cx ",cx )
         
         'SHOWS MASK AND ORIGINAL IMG'
         

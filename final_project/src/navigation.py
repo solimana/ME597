@@ -175,7 +175,7 @@ class Navigation:
            return sqrt(pow((goal_pose.position.x - self.ttbot_pose.pose.position.x), 2) +
                        pow((goal_pose.position.y - self.ttbot_pose.pose.position.y), 2))
 
-    def linear_vel(self, goal_pose, constant=.4):
+    def linear_vel(self, goal_pose, constant=.6):
             return constant * self.euclidean_distance(self.local_goal_pose)
 
 
